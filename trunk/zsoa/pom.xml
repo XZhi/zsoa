@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.zodiac</groupId>
+    <artifactId>zsoa</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    
+    <name>zsoa</name>
+    
+    <organization>
+        <name>Zodiac Innovation</name>
+        <url></url>
+    </organization>
+    <inceptionYear>2012</inceptionYear>
+    
+    <licenses>
+        <license>
+            <name>GPL v.3</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    
+    <developers>
+        <developer>
+            <id>brian</id>
+            <name>Brian Estrada</name>
+            <email>brianseg014@gmail.com</email>
+        </developer>
+    </developers>
+    
+    <modules>
+        <module>soa</module>
+        <module>soa-client</module>
+        <module>soa-server</module>
+    </modules>
+  
+</project>
