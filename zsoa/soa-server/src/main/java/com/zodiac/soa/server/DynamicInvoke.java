@@ -28,8 +28,9 @@ import com.zodiac.security.authority.RevokeAll;
 import com.zodiac.soa.InvokeException;
 import com.zodiac.soa.Request;
 import com.zodiac.soa.SOAException;
+import com.zodiac.soa.ServerException;
 import com.zodiac.soa.SessionException;
-import com.zodiac.util.ZodiacConfigurator;
+import com.zodiac.soa.ZSOAConfigurator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -45,175 +46,183 @@ import javax.servlet.http.HttpSession;
  * @author Brian Estrada <brianseg014@gmail.com>
  */
 public class DynamicInvoke {
-    
+
     /**
      * Invoke a Class' method given from a request.
-     * 
+     *
      * @param request a request
      * @return an object result
      * @throws InvokeException when executes a wrong request
      */
     public static Object invoke(MessageContext messageContext, Request request) {
-        try{
-            
+        try {
+
             //Verify the count of arguments and the count of parameters to be the same
-            if(request.getArgumentsConstructor() != null
+            if (request.getArgumentsConstructor() != null
                     && request.getParametersConstructor() != null) {
-                if(request.getArgumentsConstructor().length != 
-                        request.getParametersConstructor().length){
-                    throw new SOAException("Request.ArgumentsConstructor and "
+                if (request.getArgumentsConstructor().length
+                        != request.getParametersConstructor().length) {
+                    throw new InvokeException("Request.ArgumentsConstructor and "
                             + "Request.ParametersConstructor must have the same number of parameters.");
                 }
             } else {
-                if((request.getArgumentsConstructor() != null && request.getParametersConstructor() == null)
-                    || (request.getArgumentsConstructor() == null && request.getParametersConstructor() != null)){
-                    throw new SOAException("Request.ArgumentsConstructor and "
+                if ((request.getArgumentsConstructor() != null && request.getParametersConstructor() == null)
+                        || (request.getArgumentsConstructor() == null && request.getParametersConstructor() != null)) {
+                    throw new InvokeException("Request.ArgumentsConstructor and "
                             + "Request.ParametersConstructor must be null or be set.");
                 }
             }
-        
-            HttpServletRequest httpServletRequest = 
-                            (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
-            
+
+            HttpServletRequest httpServletRequest =
+                    (HttpServletRequest) messageContext.get(MessageContext.SERVLET_REQUEST);
+
             Class clazz = Class.forName(request.getClazz());
-            
+
             //Validate instance of BusinessLogic to be called from web service
-            if(!BusinessLogic.class.isAssignableFrom(clazz)){
+            if (!BusinessLogic.class.isAssignableFrom(clazz)) {
                 throw new InvokeException(request.getClazz() + " is not an instace of com.zodiac.soa.server.BussinessLogic");
             }
-            
+
             //If is a PrivateBusinessLogic, valid that it is in session
-            if(PrivateBusinessLogic.class.isAssignableFrom(clazz)){
-                if(!httpServletRequest.isRequestedSessionIdValid()){
+            if (PrivateBusinessLogic.class.isAssignableFrom(clazz)) {
+                if (!httpServletRequest.isRequestedSessionIdValid()) {
                     throw new SessionException("Session is not valid");
                 }
-                
+
                 HttpSession httpSession = httpServletRequest.getSession(false);
-                if(httpSession == null){
+                if (httpSession == null) {
                     throw new SessionException("Session is corrupt");
                 }
-                
+
                 Object sessionObject = httpSession.getAttribute(MessageContext.SOA_SESSION);
                 messageContext.put(MessageContext.SOA_SESSION, sessionObject);
-                
-                if(!(sessionObject instanceof Session)){
+
+                if (!(sessionObject instanceof Session)) {
                     throw new SessionException("Session is not in valid format.");
                 }
-                
+
             }
-            
+
             //Add the context
+            //I want to remove this and use the below one but it is used by PrivateBusinessLogic
             BusinessLogic.setMessageContext(messageContext);
             
             //Create the instance of the class
             Object object;
-            if(request.getArgumentsConstructor() != null
-                    && request.getArgumentsConstructor().length > 0){
+            if (request.getArgumentsConstructor() != null
+                    && request.getArgumentsConstructor().length > 0) {
                 object = clazz.getConstructor(request.getParametersConstructor())
                         .newInstance(request.getArgumentsConstructor());
             } else {
                 object = clazz.newInstance();
             }
-            
+
+            //Add the context
+            BusinessLogic.setMessageContext((BusinessLogic) object, messageContext);
+
             //Create the callable method
             Method method = clazz.getMethod(request.getMethod(), request.getParametersMethod());
-            
+
             //Verify if the user can access the method
             boolean deniedAccess = false;
             RevokeAll revokeAll = method.getAnnotation(RevokeAll.class);
-            if(revokeAll != null){
+            if (revokeAll != null) {
                 deniedAccess = true;
             }
-            
+
             //Verify if the user should be audited
             boolean auditMethod = false;
             AuditAll auditAll = method.getAnnotation(AuditAll.class);
-            if(auditAll != null){
+            if (auditAll != null) {
                 auditMethod = true;
             }
-            
+
             //Verfy access privilege and auditable by profile
-            if(PrivateBusinessLogic.class.isAssignableFrom(clazz)){
-                Session session = (Session)messageContext.get(MessageContext.SOA_SESSION);
+            if (PrivateBusinessLogic.class.isAssignableFrom(clazz)) {
+                Session session = (Session) messageContext.get(MessageContext.SOA_SESSION);
                 Revoke revoke = method.getAnnotation(Revoke.class);
-                if(revoke != null){
-                    if(!Arrays.asList(revoke.profile()).contains(session.getProfile())){
+                if (revoke != null) {
+                    if (!Arrays.asList(revoke.profile()).contains(session.getProfile())) {
                         deniedAccess = true;
                     }
                 }
-                
+
                 Grant grant = method.getAnnotation(Grant.class);
-                if(grant != null){
-                    if(Arrays.asList(grant.profile()).contains(session.getProfile())){
+                if (grant != null) {
+                    if (Arrays.asList(grant.profile()).contains(session.getProfile())) {
                         deniedAccess = false;
                     }
                 }
-                
+
                 Audit audit = method.getAnnotation(Audit.class);
-                if(audit != null){
-                    if(!Arrays.asList(audit.profile()).contains(session.getProfile())){
+                if (audit != null) {
+                    if (!Arrays.asList(audit.profile()).contains(session.getProfile())) {
                         auditMethod = true;
                     }
                 }
             }
-            
+
             //Access denied
-            if(deniedAccess){
+            if (deniedAccess) {
                 throw new SessionException("Access denied.");
             }
-            
+
             //Call auditors
-            if(auditMethod){
-                List<String> auditors = 
-                        (List<String>)ZodiacConfigurator.getInstance().get(ZodiacConfigurator.AUDITORS);
-                if(auditors != null){
+            if (auditMethod) {
+                List<String> auditors =
+                        (List<String>) ZSOAConfigurator.getInstance().get(ZSOAConfigurator.AUDITORS);
+                if (auditors != null) {
                     Auditable auditable = method.getAnnotation(Auditable.class);
                     int id = -1;
                     String name = null;
                     String description = null;
-                    if(auditable != null){
+                    if (auditable != null) {
                         id = auditable.id();
                         name = auditable.name();
                         description = auditable.description();
                     }
                     String remoteAddress = null;
-                    if(httpServletRequest != null){
+                    if (httpServletRequest != null) {
                         remoteAddress = httpServletRequest.getRemoteAddr();
                     }
-                    Session session = (Session)messageContext.get(MessageContext.SOA_SESSION);
-                    
+                    Session session = (Session) messageContext.get(MessageContext.SOA_SESSION);
+
                     Iterator<String> iterator = auditors.iterator();
-                    while(iterator.hasNext()){
+                    while (iterator.hasNext()) {
                         Class auditorClass = Class.forName(iterator.next());
-                        Auditor auditor = (Auditor)auditorClass.newInstance();
+                        Auditor auditor = (Auditor) auditorClass.newInstance();
                         AuditEvent auditEvent = new AuditEvent(
-                                id, 
-                                name, 
-                                description, 
-                                clazz, 
-                                method, 
-                                request.getArgumentsMethod(), 
-                                remoteAddress, 
-                                messageContext.get(MessageContext.APPLICATION).toString(), 
-                                session, 
+                                id,
+                                name,
+                                description,
+                                clazz,
+                                method,
+                                request.getArgumentsMethod(),
+                                remoteAddress,
+                                messageContext.get(MessageContext.APPLICATION).toString(),
+                                session,
                                 new Date());
                         auditor.audit(auditEvent);
                     }
                 }
             }
-            
+
             return method.invoke(object, request.getArgumentsMethod());
-        }
-        catch(ClassNotFoundException|InstantiationException|
-                NoSuchMethodException|IllegalAccessException|
-                InvocationTargetException|
-                NoSuchFieldException ex){
+        } catch (ServerException ex) {
+            throw ex;
+        } catch (InvocationTargetException ex) {
+            Throwable cause = ex.getTargetException();
+            if (cause != null) {
+                if (cause instanceof ServerException) {
+                    throw (ServerException) cause;
+                }
+            }
             throw new InvokeException(ex);
         } 
-        catch(SOAException ex){
-            throw ex;
+        catch (ClassNotFoundException | InstantiationException |
+                NoSuchMethodException | IllegalAccessException |
+                NoSuchFieldException ex) {
+            throw new InvokeException(ex);
         }
-
     }
-    
 }

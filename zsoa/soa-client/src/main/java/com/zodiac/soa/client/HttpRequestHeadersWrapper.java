@@ -19,7 +19,7 @@ package com.zodiac.soa.client;
 import com.zodiac.security.OneTimePassword;
 import com.zodiac.soa.HttpHeadersConstants;
 import com.zodiac.soa.SOAException;
-import com.zodiac.util.ZodiacConfigurator;
+import com.zodiac.soa.ZSOAConfigurator;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -48,23 +48,23 @@ public class HttpRequestHeadersWrapper extends HttpServletRequestWrapper {
          
         //if we are looking for the "username" request header
         if(HttpHeadersConstants.Z_APPLICATION.equals(name)) {
-            return ZodiacConfigurator.getInstance().get(
-                    ZodiacConfigurator.APPLICATION_ID).toString();
+            return ZSOAConfigurator.getInstance().get(
+                    ZSOAConfigurator.APPLICATION_ID).toString();
         }
         
         if(HttpHeadersConstants.Z_TOKEN.equals(name)){
-            int X = ZodiacConfigurator.getInstance().get(
-                    ZodiacConfigurator.ENCRYPT_TOKEN_LIFETIME, int.class);
+            int X = ZSOAConfigurator.getInstance().get(
+                    ZSOAConfigurator.ENCRYPT_TOKEN_LIFETIME, int.class);
             String application_password = 
-                    ZodiacConfigurator.getInstance().get(
-                    ZodiacConfigurator.APPLICATION_PASSWORD, String.class);
+                    ZSOAConfigurator.getInstance().get(
+                    ZSOAConfigurator.APPLICATION_PASSWORD, String.class);
             Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            int countDigits = ZodiacConfigurator.getInstance().get(
-                    ZodiacConfigurator.ENCRYPT_COUNT_DIGITS, int.class);
-            boolean encryptWithChecksum = ZodiacConfigurator.getInstance().get(
-                    ZodiacConfigurator.ENCRYPT_WITH_CHECKSUM, boolean.class);
-            int encryptOffset = ZodiacConfigurator.getInstance().get(
-                    ZodiacConfigurator.ENCRYPT_OFFSET, int.class);
+            int countDigits = ZSOAConfigurator.getInstance().get(
+                    ZSOAConfigurator.ENCRYPT_COUNT_DIGITS, int.class);
+            boolean encryptWithChecksum = ZSOAConfigurator.getInstance().get(
+                    ZSOAConfigurator.ENCRYPT_WITH_CHECKSUM, boolean.class);
+            int encryptOffset = ZSOAConfigurator.getInstance().get(
+                    ZSOAConfigurator.ENCRYPT_OFFSET, int.class);
             try {
                 String zToken = OneTimePassword.generateOTP(
                                 application_password.getBytes(),
@@ -100,13 +100,13 @@ public class HttpRequestHeadersWrapper extends HttpServletRequestWrapper {
         }
          
         //add new headers
-        if(ZodiacConfigurator.getInstance().get(
-                ZodiacConfigurator.APPLICATION_ID) != null){
+        if(ZSOAConfigurator.getInstance().get(
+                ZSOAConfigurator.APPLICATION_ID) != null){
             list.add(HttpHeadersConstants.Z_APPLICATION);
         }
         
-        if(ZodiacConfigurator.getInstance().get(
-                ZodiacConfigurator.APPLICATION_PASSWORD) != null){
+        if(ZSOAConfigurator.getInstance().get(
+                ZSOAConfigurator.APPLICATION_PASSWORD) != null){
             list.add(HttpHeadersConstants.Z_TOKEN);
         }
          

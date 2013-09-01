@@ -55,7 +55,7 @@ public class ResponseTest {
     public void testSetsGets() {
         System.out.println("SetsGets");
         
-        Exception exception = new Exception();
+        ServerException exception = new ServerException();
         Object result = 1;
         String textException = "exception";
         

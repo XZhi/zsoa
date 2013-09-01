@@ -24,21 +24,20 @@ import com.zodiac.soa.SessionException;
  * @author Brian Estrada <brianseg014@gmail.com>
  */
 public abstract class PrivateBusinessLogic extends BusinessLogic {
-    
+
     private Session session;
-    
-    public PrivateBusinessLogic(){
-        Session session = 
-                (Session)getMessageContext().get(MessageContext.SOA_SESSION);
-        if(session == null){
+
+    public PrivateBusinessLogic() {
+        Session session =
+                (Session) getMessageContext().get(MessageContext.SOA_SESSION);
+        if (session == null) {
             throw new SessionException("Session should be initialized.");
         }
-        
+
         this.session = session;
     }
-    
-    public Session getSession(){
+
+    public Session getSession() {
         return session;
     }
-    
 }

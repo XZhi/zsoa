@@ -16,6 +16,7 @@
  */
 package com.zodiac.util;
 
+import com.zodiac.security.Base64;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

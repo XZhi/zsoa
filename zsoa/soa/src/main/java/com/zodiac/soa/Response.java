@@ -26,7 +26,7 @@ public class Response extends AbstractDTO {
     /**
      * Exception to be thrown at the requester.
      */
-    private Exception exception;
+    private ServerException exception;
     
     /**
      * The trace exception when request is textModeException
@@ -41,8 +41,8 @@ public class Response extends AbstractDTO {
     public Response() {
     }
     
-    public Response(Exception exception){
-        this.exception = exception;
+    public Response(ServerException e){
+        this.exception = e;
     }
     
     public Response(String textException){

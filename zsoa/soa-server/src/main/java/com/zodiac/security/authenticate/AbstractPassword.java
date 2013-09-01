@@ -16,7 +16,7 @@
  */
 package com.zodiac.security.authenticate;
 
-import com.zodiac.util.Base64;
+import com.zodiac.security.Base64;
 import com.zodiac.util.SortedList;
 import java.util.Date;
 import java.util.Iterator;

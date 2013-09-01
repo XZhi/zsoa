@@ -65,6 +65,37 @@ public class Request extends AbstractDTO {
     public Request() {
     }
     
+    public Request(String clazz, Object[] argumentsConstructor, String method, Object[] argumentsMethod){
+        this(clazz, method, argumentsMethod);
+        this.argumentsConstructor = argumentsConstructor;
+        if(argumentsConstructor != null){
+            Class[] parametersContructor = new Class[argumentsConstructor.length];
+            int i = 0;
+            for(Object o : argumentsConstructor){
+                parametersContructor[i] = o.getClass();
+            }
+            this.parametersConstructor = parametersContructor;
+        } else {
+            this.parametersConstructor = null;
+        }
+    }
+    
+    public Request(String clazz, String method, Object[] argumentsMethod){
+        this.clazz = clazz;
+        this.method = method;
+        this.argumentsMethod = argumentsMethod;
+        if(argumentsMethod != null){
+            Class[] parametersMethod = new Class[argumentsMethod.length];
+            int i = 0;
+            for(Object o : argumentsMethod){
+                parametersMethod[i] = o.getClass();
+            }
+            this.parametersMethod = parametersMethod;
+        } else {
+            this.parametersMethod = null;
+        }
+    }
+    
     public Request(String clazz, String method, Class[] parametersMethod, Object[] argumentsMethod) {
         this.clazz = clazz;
         this.method = method;

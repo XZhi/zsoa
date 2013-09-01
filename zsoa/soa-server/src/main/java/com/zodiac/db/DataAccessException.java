@@ -16,7 +16,7 @@
  */
 package com.zodiac.db;
 
-import com.zodiac.soa.server.ServerException;
+import com.zodiac.soa.ServerException;
 
 /**
  *

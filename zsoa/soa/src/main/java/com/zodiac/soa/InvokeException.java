@@ -21,7 +21,7 @@ package com.zodiac.soa;
  *
  * @author Brian Estrada <brianseg014@gmail.com>
  */
-public class InvokeException extends SOAException {
+public class InvokeException extends ServerException {
 
     /**
      * {@inherits}
