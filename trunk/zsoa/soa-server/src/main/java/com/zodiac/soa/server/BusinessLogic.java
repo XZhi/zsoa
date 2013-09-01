@@ -25,19 +25,24 @@ import javax.xml.ws.handler.MessageContext;
  */
 public abstract class BusinessLogic {
     
-    private MessageContext messageContext;
+    //private MessageContext messageContext;
+    private static MessageContext messageContext;
 
     public MessageContext getMessageContext() {
         return messageContext;
     }
     
-    public static void setMessageContext(MessageContext messageContext) 
+    public static void setMessageContext(BusinessLogic bl, MessageContext messageContext) 
             throws NoSuchFieldException, IllegalArgumentException, IllegalAccessException{
         Field messageContextField = BusinessLogic.class.getDeclaredField("messageContext");
         if(messageContextField != null) {
             messageContextField.setAccessible(true);
-            messageContextField.set(null, messageContext);
+            messageContextField.set(bl, messageContext);
         }
+    }
+    
+    public static void setMessageContext(MessageContext messageContext) {
+        BusinessLogic.messageContext = messageContext;
     }
     
     public String getApplication(){

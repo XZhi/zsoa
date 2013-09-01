@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.zodiac.util;
+package com.zodiac.soa;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,13 +39,13 @@ import org.xml.sax.SAXException;
  *
  * @author Brian Estrada <brianseg014@gmail.com>
  */
-public class ZodiacConfigurator {
+public class ZSOAConfigurator {
 
     private static String CONFIGURATOR_FILENAME = "zsoa.xml";
     private static Map<String, Object> data;
-    private static ZodiacConfigurator INSTANCE;
+    private static ZSOAConfigurator INSTANCE;
 
-    private ZodiacConfigurator() {
+    private ZSOAConfigurator() {
         data = new HashMap();
         defaults();
         File stocks = new File(CONFIGURATOR_FILENAME);
@@ -235,7 +235,7 @@ public class ZodiacConfigurator {
                 throw new ParserConfigurationException("app-auth should appear once in " + filename + ".");
             }
         } catch (SAXException | IOException | ParserConfigurationException ex) {
-            Logger.getLogger(ZodiacConfigurator.class.getName()).log(Level.ERROR, null, ex);
+            Logger.getLogger(ZSOAConfigurator.class.getName()).log(Level.ERROR, null, ex);
         }
 
     }
@@ -248,10 +248,10 @@ public class ZodiacConfigurator {
         return (T) get(key);
     }
 
-    public static ZodiacConfigurator getInstance() {
+    public static ZSOAConfigurator getInstance() {
         if (INSTANCE == null) {
-            synchronized (ZodiacConfigurator.class) {
-                INSTANCE = new ZodiacConfigurator();
+            synchronized (ZSOAConfigurator.class) {
+                INSTANCE = new ZSOAConfigurator();
             }
         }
         return INSTANCE;

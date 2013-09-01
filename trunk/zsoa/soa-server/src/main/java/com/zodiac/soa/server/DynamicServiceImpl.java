@@ -16,23 +16,19 @@
  */
 package com.zodiac.soa.server;
 
+import com.zodiac.soa.ServerException;
 import com.zodiac.security.OneTimePassword;
 import com.zodiac.soa.HttpHeadersConstants;
 import com.zodiac.soa.Request;
 import com.zodiac.soa.Response;
-import com.zodiac.soa.SOAException;
-import com.zodiac.util.ZodiacConfigurator;
+import com.zodiac.soa.ZSOAConfigurator;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.jws.WebService;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
 import javax.xml.ws.WebServiceContext;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -60,92 +56,87 @@ public class DynamicServiceImpl implements DynamicService {
 
     @Override
     public String run(String xml) {
+        Response response = null;
         try {
-            Response response = null;
             Request request = new Request();
             request.fromXML(xml);
 
             MessageContext messageContext = new MessageContext(wsContext.getMessageContext());
             try {
                 Map<String, Object> headers = (Map) messageContext.get(MessageContext.HTTP_REQUEST_HEADERS);
-                
-                String application = headers.get(HttpHeadersConstants.Z_APPLICATION).toString();
+
+                String application = (String) headers.get(HttpHeadersConstants.Z_APPLICATION);
                 messageContext.put(MessageContext.APPLICATION, application);
-                
+
                 //Verify if the application is allowed
-                boolean only_allowed_application = ZodiacConfigurator.getInstance().get(
-                        ZodiacConfigurator.ONLY_ALLOWED_APPLICATION, boolean.class);
+                boolean only_allowed_application = ZSOAConfigurator.getInstance().get(
+                        ZSOAConfigurator.ONLY_ALLOWED_APPLICATION, boolean.class);
                 if (only_allowed_application) {
                     if (application == null) {
-                        throw new SOAException("Z-Application must be specified in request headers.");
+                        throw new ServerException("Z-Application must be specified in request headers.");
                     }
 
                     String zToken = headers.get(HttpHeadersConstants.Z_TOKEN).toString();
                     if (zToken == null) {
-                        throw new SOAException("Z-Token must be specified in request headers.");
+                        throw new ServerException("Z-Token must be specified in request headers.");
                     }
-                    
+
                     String applicationId = messageContext.get(MessageContext.APPLICATION).toString();
                     Map<String, String> applications =
-                            (Map<String, String>) ZodiacConfigurator.getInstance()
-                            .get(ZodiacConfigurator.APPLICATIONS);
+                            (Map<String, String>) ZSOAConfigurator.getInstance()
+                            .get(ZSOAConfigurator.APPLICATIONS);
                     String application_password = applications.get(applicationId);
                     if (application_password == null) {
-                        throw new SecurityException("The application " + applicationId
+                        throw new ServerException("The application " + applicationId
                                 + " is not allowed.");
                     }
 
-                    int X = ZodiacConfigurator.getInstance().get(
-                            ZodiacConfigurator.ENCRYPT_TOKEN_LIFETIME, int.class);
+                    int X = ZSOAConfigurator.getInstance().get(
+                            ZSOAConfigurator.ENCRYPT_TOKEN_LIFETIME, int.class);
                     Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-                    int countDigits = ZodiacConfigurator.getInstance().get(
-                            ZodiacConfigurator.ENCRYPT_COUNT_DIGITS, int.class);
-                    int encryptOffset = ZodiacConfigurator.getInstance().get(
-                            ZodiacConfigurator.ENCRYPT_OFFSET, int.class);
-                    boolean encryptWithChecksum = ZodiacConfigurator.getInstance().get(
-                            ZodiacConfigurator.ENCRYPT_WITH_CHECKSUM, boolean.class);
-                    
+                    int countDigits = ZSOAConfigurator.getInstance().get(
+                            ZSOAConfigurator.ENCRYPT_COUNT_DIGITS, int.class);
+                    int encryptOffset = ZSOAConfigurator.getInstance().get(
+                            ZSOAConfigurator.ENCRYPT_OFFSET, int.class);
+                    boolean encryptWithChecksum = ZSOAConfigurator.getInstance().get(
+                            ZSOAConfigurator.ENCRYPT_WITH_CHECKSUM, boolean.class);
+
                     String zTokenExpected = OneTimePassword.generateOTP(
                             application_password.getBytes(),
                             now.getTimeInMillis() / X,
                             countDigits,
                             encryptWithChecksum,
                             encryptOffset);
-                    
-                    if(!zTokenExpected.equals(zToken)){
-                        throw new SecurityException("Z-Token is not valid.");
+
+                    if (!zTokenExpected.equals(zToken)) {
+                        throw new ServerException("Z-Token is not valid.");
                     }
                 }
 
                 Object result = DynamicInvoke.invoke(messageContext, request);
                 response = new Response(result);
-            } catch (SOAException ex) {
+            } catch (ServerException ex) {
                 if (request.isTextModeException()) {
                     response = new Response(ex.toString());
                 } else {
                     response = new Response(ex);
                 }
-            } catch (ServerException ex) {
+            } catch (Exception ex) {
                 log.fatal(ex);
-
-                if (request.isTextModeException()) {
-                    response = new Response(getGenericException().toString());
-                } else {
-                    response = new Response(getGenericException());
-                }
-            } finally {
-                return response.toXML();
+                response = new Response(getGenericException());
             }
         } catch (Exception ex) {
             log.fatal(ex);
-            return new Response(getGenericException()).toXML();
+            response = new Response(getGenericException());
+        } finally {
+            return response.toXML();
         }
     }
 
-    public SOAException getGenericException() {
-        SOAException soaEx =
-                new SOAException("An internal critical exception on soa server have been thrown. "
+    public ServerException getGenericException() {
+        ServerException e =
+                new ServerException("An unhandle exception on soa server has been thrown. "
                 + "Contact your system administrator or Zodiac Innovation team.");
-        return soaEx;
+        return e;
     }
 }

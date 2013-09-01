@@ -21,7 +21,7 @@ package com.zodiac.soa;
  *
  * @author Brian Estrada <brianseg014@gmail.com>
  */
-public class SOAException extends RuntimeException {
+public class SOAException extends ServerException {
 
     /**
      * {@inherits}
@@ -33,7 +33,7 @@ public class SOAException extends RuntimeException {
      * {@inherits}
      */
     public SOAException(String message) {
-        super("an error have been thrown on soa server: " + message);
+        super("an error has been thrown on soa server: " + message);
     }
 
     /**
@@ -47,7 +47,7 @@ public class SOAException extends RuntimeException {
      * {@inherits}
      */
     public SOAException(String message, Throwable cause) {
-        super("an error have been thrown on server soa: " + message, cause);
+        super("an error has been thrown on server soa: " + message, cause);
     }
     
 }

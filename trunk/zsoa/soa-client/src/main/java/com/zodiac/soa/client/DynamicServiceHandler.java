@@ -18,6 +18,8 @@ package com.zodiac.soa.client;
 
 import com.zodiac.soa.Request;
 import com.zodiac.soa.Response;
+import com.zodiac.soa.SOAException;
+import com.zodiac.soa.ServerException;
 import java.net.URL;
 import java.util.Map;
 import javax.xml.ws.BindingProvider;
@@ -47,16 +49,20 @@ public class DynamicServiceHandler {
      * 
      * @param request a Request to be executed.
      * @return an object
-     * @throws Exception an Exception thrown in server. 
+     * @throws SOAException an Exception thrown in server as final user exception.
+     * @throws ServerException an Exception thrown in server as developer debug exception.
      */
-    public Object run(Request request, String applicationId) throws Exception{
+    public Object run(Request request) {
         String result = this.service.run(request.toXML());
         
         Response response = new Response();
-        response.fromXML(result);
+        response.fromXML(result); 
         
-        if(response.getException() instanceof Exception){
-            throw response.getException();
+        if(response.getException() instanceof SOAException){
+            throw (SOAException)response.getException();
+        } else if (response.getException() instanceof ServerException){
+            response.getException().printStackTrace();
+            throw (ServerException)response.getException();
         }
         
         return response.getResult();

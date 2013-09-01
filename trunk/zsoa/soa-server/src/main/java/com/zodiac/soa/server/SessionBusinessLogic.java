@@ -16,6 +16,7 @@
  */
 package com.zodiac.soa.server;
 
+import com.zodiac.soa.ServerException;
 import com.zodiac.security.Session;
 import com.zodiac.soa.SessionException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,11 +36,11 @@ public abstract class SessionBusinessLogic extends BusinessLogic {
         if(session == null){
             throw new ServerException("session cannot be null");
         }
-        
-        HttpServletRequest httpServletRequest = 
-                (HttpServletRequest)getMessageContext().get(MessageContext.SERVLET_REQUEST);
-        if(httpServletRequest.getRequestedSessionId() == null
-                || !httpServletRequest.getRequestedSessionId().equals(session.getSessionID())){
+        if(httpSession == null){
+            throw new SessionException("session is not open");
+        }
+        if(httpSession.getId() == null
+                || !httpSession.getId().equals(session.getSessionID())){
             throw new SessionException("session has no valid jsessionid");
         }
         
@@ -60,7 +61,8 @@ public abstract class SessionBusinessLogic extends BusinessLogic {
         HttpServletRequest httpServletRequest = 
                 (HttpServletRequest)getMessageContext().get(MessageContext.SERVLET_REQUEST);
         HttpSession httpSession = this.httpSession = httpServletRequest.getSession(true);
-        return httpServletRequest.getRequestedSessionId();
+        String jSessionId = httpSession.getId();
+        return jSessionId;
     }
     
     public boolean destroy() {
