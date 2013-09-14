@@ -55,10 +55,10 @@ public class OneTimePasswordTest {
      */
     @Test
     public void testGenerateOTP() throws Exception {
-        System.out.println("generateOTP (this test will take about 14s)");
+        System.out.println("generateOTP (this test will take about 11s)");
         
         int T0 = 0;
-        int X = 10000;
+        int X = 6000;
         
         byte[] secret = "pwd".getBytes();
         int codeDigits = 6;
@@ -68,7 +68,7 @@ public class OneTimePasswordTest {
                 
         movingFactor = (Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis() - T0) / X;
         String expResult = OneTimePassword.generateOTP(secret, movingFactor, codeDigits, addChecksum, truncationOffset);
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         movingFactor = (Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis() - T0) / X;
         String result = OneTimePassword.generateOTP(secret, movingFactor, codeDigits, addChecksum, truncationOffset);
         assertEquals(expResult, result);

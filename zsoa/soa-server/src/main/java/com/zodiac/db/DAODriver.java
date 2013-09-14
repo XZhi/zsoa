@@ -16,6 +16,7 @@
  */
 package com.zodiac.db;
 
+import com.zodiac.soa.ZSOAConfigurator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,46 +25,67 @@ import java.util.Map;
  * @author Brian Estrada <brianseg014@gmail.com>
  */
 public class DAODriver {
-    
+
     private static Map<String, DAO> drivers;
-    
-    private static String defaultConnector;
-        
+
     static {
         drivers = new HashMap();
     }
-    
+
     protected DAODriver() {
     }
-    
-    public static void setDefaultConnector(String defaultConnector){
-        DAODriver.defaultConnector = defaultConnector;
-    }
-    
-    public static <T extends DAO>T getDAODriver(Class<T> daoClass)
-            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        return getDAODriver(daoClass, null) ;
-    }
-    
-    public static <T extends DAO>T getDAODriver(Class<T> daoClass, String connector) 
-            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        DAOPackage daoPackage = 
-                (DAOPackage)daoClass.getAnnotation(DAOPackage.class);
-        if(daoPackage == null){
-            throw new IllegalArgumentException("The dao driver does not have an implementation package defined. "
-                    + "Use annotation DAOPackage.");
+
+    public static <T extends DAO> T getDAODriver(String context, Class<T> daoClass) {
+        Map<String, Object> contexts =
+                ZSOAConfigurator.getInstance().get(ZSOAConfigurator.DATAACCESSOBJECT_CONTEXTS, Map.class);
+        Map<String, Object> _context = (Map<String, Object>) contexts.get(context);
+
+        String driver = (String) _context.get(ZSOAConfigurator.DATAACCESSOBJECT_CONTEXTS_DRIVER);
+
+        Map<String, Object> daos =
+                ZSOAConfigurator.getInstance().get(ZSOAConfigurator.DATAACCESSOBJECTS, Map.class);
+        String impl = (String) daos.get(daoClass.getName() + "." + driver);
+
+        if (impl == null || impl.length() == 0) {
+            String implpkg = (String) daos.get(daoClass.getName());
+            if (implpkg != null && implpkg.length() > 0) {
+                impl = implpkg + "." + daoClass.getCanonicalName() + driver;
+            }
+        }
+
+        if(impl == null || impl.length() == 0){
+            String implpkg = (String)_context.get(ZSOAConfigurator.DATAACCESSOBJECT_CONTEXTS_IMPLPKG);
+            if(implpkg != null && implpkg.length() > 0){
+                impl = implpkg + "." + daoClass.getCanonicalName() + driver;
+            }
         }
         
-        String className = 
-                daoPackage.implementation() + "." + daoClass.getSimpleName() + 
-                (connector != null ? connector : DAODriver.defaultConnector);
-        
-        DAO dao = drivers.get(className);
-        if(dao == null){
-            dao = (DAO)Class.forName(className).newInstance();
-            drivers.put(className, dao);
+        if(impl == null || impl.length() == 0){
+            DAOPackage daoPackage = daoClass.getAnnotation(DAOPackage.class);
+            if(daoPackage != null && daoPackage.pkg().length() > 0){
+                String implpkg = daoPackage.pkg();
+                impl = implpkg + "." + daoClass.getCanonicalName() + driver;
+            }
         }
-        return (T)dao;
+        
+        if(impl == null || impl.length() == 0){
+            throw new DAOException("could not found an implementation");
+        }
+        try {
+            DAO dao = drivers.get(impl);
+            if(dao != null){
+                return (T)dao;
+            }
+            
+            Class implClass = Class.forName(impl);
+            dao = (DAO)implClass.newInstance();
+            
+            drivers.put(impl, dao);
+            
+            return (T)dao;
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+            throw new DAOException("unable to instance " + impl, ex);
+        }
+        
     }
-    
 }

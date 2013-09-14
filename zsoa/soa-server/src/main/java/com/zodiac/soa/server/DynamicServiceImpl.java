@@ -21,8 +21,11 @@ import com.zodiac.security.OneTimePassword;
 import com.zodiac.soa.HttpHeadersConstants;
 import com.zodiac.soa.Request;
 import com.zodiac.soa.Response;
+import com.zodiac.soa.SOAException;
 import com.zodiac.soa.ZSOAConfigurator;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import javax.annotation.PostConstruct;
@@ -65,7 +68,9 @@ public class DynamicServiceImpl implements DynamicService {
             try {
                 Map<String, Object> headers = (Map) messageContext.get(MessageContext.HTTP_REQUEST_HEADERS);
 
-                String application = (String) headers.get(HttpHeadersConstants.Z_APPLICATION);
+                List applicationList = (List)headers.get(HttpHeadersConstants.Z_APPLICATION);
+                String application = applicationList != null && applicationList.size() > 0 ? 
+                                            (String)applicationList.get(0) : null;
                 messageContext.put(MessageContext.APPLICATION, application);
 
                 //Verify if the application is allowed
@@ -76,18 +81,25 @@ public class DynamicServiceImpl implements DynamicService {
                         throw new ServerException("Z-Application must be specified in request headers.");
                     }
 
-                    String zToken = headers.get(HttpHeadersConstants.Z_TOKEN).toString();
+                    List zTokenList = (List)headers.get(HttpHeadersConstants.Z_TOKEN);
+                    String zToken = zTokenList != null && zTokenList.size() > 0 ? 
+                                            (String)zTokenList.get(0) : null;
                     if (zToken == null) {
                         throw new ServerException("Z-Token must be specified in request headers.");
                     }
-
-                    String applicationId = messageContext.get(MessageContext.APPLICATION).toString();
+                    
                     Map<String, String> applications =
                             (Map<String, String>) ZSOAConfigurator.getInstance()
                             .get(ZSOAConfigurator.APPLICATIONS);
-                    String application_password = applications.get(applicationId);
+                    
+                    if(applications == null){
+                        throw new ServerException("The application " + application
+                                + " is not allowed.");
+                    }
+                    
+                    String application_password = applications.get(application);
                     if (application_password == null) {
-                        throw new ServerException("The application " + applicationId
+                        throw new SecurityException("The application " + application
                                 + " is not allowed.");
                     }
 
@@ -100,10 +112,11 @@ public class DynamicServiceImpl implements DynamicService {
                             ZSOAConfigurator.ENCRYPT_OFFSET, int.class);
                     boolean encryptWithChecksum = ZSOAConfigurator.getInstance().get(
                             ZSOAConfigurator.ENCRYPT_WITH_CHECKSUM, boolean.class);
-
+                    
+                    long movingFactor = now.getTimeInMillis() / X;
                     String zTokenExpected = OneTimePassword.generateOTP(
                             application_password.getBytes(),
-                            now.getTimeInMillis() / X,
+                            movingFactor,
                             countDigits,
                             encryptWithChecksum,
                             encryptOffset);

@@ -16,19 +16,28 @@
  */
 package com.zodiac.db;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.zodiac.soa.ServerException;
 
 /**
  *
  * @author Brian Estrada <brianseg014@gmail.com>
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DAOPackage {
+public class DAOException extends ServerException {
+
+    public DAOException() {
+    }
+
+    public DAOException(String message) {
+        super(message);
+    }
+
+    public DAOException(Throwable cause) {
+        super(cause);
+    }
+
+    public DAOException(String message, Throwable cause) {
+        super(message, cause);
+    }
     
-    public String pkg();
     
 }
