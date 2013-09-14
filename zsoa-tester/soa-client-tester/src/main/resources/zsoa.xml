@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<zodiac>
+	<soa>
+		<servicehandlers>
+			<dynamicservicehandler context="default" 
+									application-name="test"
+									application-password="test"
+									count-digits="6"
+									token-lifetime="30"
+									url="http://localhost:8080/soa-server-tester/DynamicService"
+									 />
+		</servicehandlers>
+	</soa>
+</zodiac>

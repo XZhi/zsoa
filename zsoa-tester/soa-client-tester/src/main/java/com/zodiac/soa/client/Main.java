@@ -16,7 +16,6 @@
  */
 package com.zodiac.soa.client;
 
-import com.zodiac.soa.Request;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -32,15 +31,21 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        try {
-            DynamicServiceHandler dsh = new DynamicServiceHandler(
-                    new URL("http://localhost:8080/soa-server-tester/DynamicService"));
-            
-            PublicManagerTest.test(dsh);
-            SessionManagerTest.test(dsh);
-            PrivateManagerTest.test(dsh);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
+        System.out.println("Starting set of test...");
+
+        System.out.println("Tests (NoDB,NoXMLConf)");
+
+        System.out.println("Connecting to URL Context...");
+
+        System.out.println("Tests(NoDB,WithXMLConf)");
+        DynamicServiceHandler dsh = ServiceHandlerFactory.getServiceHandler("default");
+
+        System.out.println("Public test:");
+        PublicManagerTest.test(dsh);
+        System.out.println("Session test:");
+        SessionManagerTest.test(dsh);
+        System.out.println("Private test:");
+        PrivateManagerTest.test(dsh);
     }
 }
