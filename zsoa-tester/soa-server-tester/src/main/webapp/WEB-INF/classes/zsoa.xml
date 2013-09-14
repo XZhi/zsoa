@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<zodiac>
+	<soa>
+		<app-auth>
+			<only-allowed-application>true</only-allowed-application>
+			<count-digits>6</count-digits>
+			<token-lifetime>30</token-lifetime>
+			<applications>
+				<application name="test" password="test"/>
+			</applications>
+		</app-auth>
+	</soa>
+</zodiac>
