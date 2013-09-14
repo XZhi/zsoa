@@ -14,21 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.zodiac.db;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.zodiac.soa;
 
 /**
  *
  * @author Brian Estrada <brianseg014@gmail.com>
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DAOPackage {
+public class RequestException extends ClientException {
+
+    public RequestException() {
+    }
+
+    public RequestException(String message) {
+        super(message);
+    }
+
+    public RequestException(Throwable cause) {
+        super(cause);
+    }
+
+    public RequestException(String message, Throwable cause) {
+        super(message, cause);
+    }
     
-    public String pkg();
+    
     
 }
